@@ -104,9 +104,10 @@ function mergeItemValues(target, source) {
 
 // Function to merge collected values into the original item
 function mergeCollectedValuesIntoOriginal(original, collectedValues) {
+  const unupdatableColumns = ["item_id__1"]; // Add other unupdatable column IDs as needed
+
   original.column_values.forEach((column) => {
-    // Check if the original value is empty and a collected value is present
-    if (collectedValues[column.id] && !column.text) {
+    if (collectedValues[column.id] && !column.text && !unupdatableColumns.includes(column.id)) {
       console.log(`Before merge: ${column.id} - Original: ${column.text}, Collected: ${collectedValues[column.id]}`);
       column.text = collectedValues[column.id];
       console.log(`After merge: ${column.id} - Merged: ${column.text}`);
@@ -120,7 +121,13 @@ function mergeCollectedValuesIntoOriginal(original, collectedValues) {
 // Function to update the original item
 async function updateItem(itemId, values) {
   const updates = {};
+  const unupdatableColumns = ["item_id__1"]; // Add other unupdatable column IDs as needed
+
   values.forEach((column) => {
+    if (unupdatableColumns.includes(column.id)) {
+      return; // Skip unupdatable columns
+    }
+
     if (column.id === EMAIL_COLUMN_ID) {
       updates[column.id] = {
         email: column.text,
