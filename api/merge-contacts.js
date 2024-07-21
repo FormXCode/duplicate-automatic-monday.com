@@ -46,6 +46,7 @@ async function getAllBoardItems(boardId) {
         { query, variables },
         { headers }
       );
+      console.log('Full API Response:', JSON.stringify(response.data, null, 2));
       const data = response.data.data.boards[0].items_page;
       items = items.concat(data.items);
       cursor = data.cursor;
@@ -107,7 +108,7 @@ function mergeCollectedValuesIntoOriginal(original, collectedValues) {
   const unupdatableColumns = ["item_id__1"]; // Add other unupdatable column IDs as needed
 
   original.column_values.forEach((column) => {
-    if (collectedValues[column.id] && !column.text && !unupdatableColumns.includes(column.id)) {
+    if (collectedValues[column.id] && (!column.text || column.text === "") && !unupdatableColumns.includes(column.id)) {
       console.log(`Before merge: ${column.id} - Original: ${column.text}, Collected: ${collectedValues[column.id]}`);
       column.text = collectedValues[column.id];
       console.log(`After merge: ${column.id} - Merged: ${column.text}`);
