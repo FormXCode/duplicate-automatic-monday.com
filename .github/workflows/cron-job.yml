@@ -2,7 +2,7 @@ name: Schedule Merge Contacts
 
 on:
   schedule:
-    - cron: '* * * * *'  # Run every 5 minutes
+    - cron: '*/1 * * * *'  # Run every 5 minutes
   workflow_dispatch:
 
 jobs:
