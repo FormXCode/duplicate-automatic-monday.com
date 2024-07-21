@@ -97,7 +97,6 @@ async function mergeItem(original, duplicate) {
     if (!originalColumn.text) {
       originalColumn.text = column.text;
     }
-    // If both original and duplicate have text, we keep the original's text
   });
   console.log(`Merged item ${duplicate.id} into ${original.id}`);
 }
