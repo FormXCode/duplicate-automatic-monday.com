@@ -112,18 +112,22 @@ async function updateItem(itemId, values) {
         text: "", // Ensure the text field is an empty string
       };
     } else {
-      updates[column.id] = column.text;
+      updates[column.id] = column.text || ""; // Ensure empty strings for empty values
     }
   });
 
-  const columnValuesString = JSON.stringify(updates).replace(/"([^"]+)":/g, '$1:');
+  const columnValuesString = JSON.stringify(updates);
+  console.log(`Updating item ${itemId} with values: ${columnValuesString}`);
 
   const mutation = `
   mutation {
-    change_multiple_column_values(item_id: ${itemId}, board_id: ${BOARD_ID}, column_values: "${columnValuesString.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}") {
+    change_multiple_column_values(item_id: ${itemId}, board_id: ${BOARD_ID}, column_values: "${columnValuesString.replace(/"/g, '\\"')}")
+    {
       id
     }
   }`;
+
+  console.log(`Mutation query: ${mutation}`);
 
   try {
     const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
