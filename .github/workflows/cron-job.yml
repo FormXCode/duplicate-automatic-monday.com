@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Call Vercel Function
         run: |
-          curl -X GET "https://vercel.com/formx-automations-platform/duplicate-handling-monday-com"
+          curl -X GET "https://duplicate-handling-monday-5d97zqdwr-formx-automations-platform.vercel.app/"
