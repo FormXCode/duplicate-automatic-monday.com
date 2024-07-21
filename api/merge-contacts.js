@@ -68,10 +68,11 @@ async function mergeContacts(items, emailColumnId) {
     const itemId = item.id;
     const email = item.column_values.find((column) => column.id === emailColumnId)?.text;
     if (email) {
-      if (emailMap[email]) {
-        emailMap[email].push(item);
+      const normalizedEmail = email.toLowerCase();
+      if (emailMap[normalizedEmail]) {
+        emailMap[normalizedEmail].push(item);
       } else {
-        emailMap[email] = [item];
+        emailMap[normalizedEmail] = [item];
       }
     }
   });
