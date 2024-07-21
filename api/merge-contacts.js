@@ -82,7 +82,7 @@ async function mergeContacts(items, emailColumnId) {
       const original = group[0];
       console.log(`Original item for ${email}: ${JSON.stringify(original, null, 2)}`);
       for (let i = 1; i < group.length; i++) {
-        await mergeItem(original, group[i]);
+        mergeItem(original, group[i]);
         await deleteItem(group[i].id);
       }
       await updateItem(original.id, original.column_values);
@@ -91,10 +91,10 @@ async function mergeContacts(items, emailColumnId) {
 }
 
 // Function to merge duplicate item into the original item
-async function mergeItem(original, duplicate) {
+function mergeItem(original, duplicate) {
   duplicate.column_values.forEach((column) => {
     const originalColumn = original.column_values.find((col) => col.id === column.id);
-    if (!originalColumn.text) {
+    if (!originalColumn.text && column.text) {
       originalColumn.text = column.text;
     }
   });
