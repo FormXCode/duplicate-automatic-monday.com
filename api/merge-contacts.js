@@ -41,6 +41,7 @@ async function getAllBoardItems(boardId) {
       items = items.concat(data.items);
       cursor = data.cursor;
       hasMore = !!cursor;
+      console.log(`Fetched ${data.items.length} items, cursor: ${cursor}`);
     } catch (error) {
       console.error('Error fetching board items:', error.response ? error.response.data : error.message);
       throw error;
@@ -53,12 +54,9 @@ async function getAllBoardItems(boardId) {
 // Function to merge contacts
 async function mergeContacts(items, emailColumnId) {
   const emailMap = {};
-  const duplicates = [];
-
   items.forEach(item => {
     const itemId = item.id;
     const email = item.column_values.find(column => column.id === emailColumnId)?.text;
-
     if (email) {
       if (emailMap[email]) {
         emailMap[email].push(item);
@@ -67,6 +65,8 @@ async function mergeContacts(items, emailColumnId) {
       }
     }
   });
+
+  console.log(`Email map: ${JSON.stringify(emailMap, null, 2)}`);
 
   for (const [email, group] of Object.entries(emailMap)) {
     if (group.length > 1) {
@@ -84,12 +84,11 @@ async function mergeContacts(items, emailColumnId) {
 // Function to merge duplicate item into the original item
 async function mergeItem(original, duplicate) {
   duplicate.column_values.forEach(column => {
-    if (column.text) {
-      const originalColumn = original.column_values.find(col => col.id === column.id);
-      if (!originalColumn.text) {
-        originalColumn.text = column.text;
-      }
+    const originalColumn = original.column_values.find(col => col.id === column.id);
+    if (!originalColumn.text) {
+      originalColumn.text = column.text;
     }
+    // If both original and duplicate have text, we keep the original's text
   });
   console.log(`Merged item ${duplicate.id} into ${original.id}`);
 }
@@ -101,9 +100,12 @@ async function updateItem(itemId, values) {
     updates[column.id] = column.text;
   });
 
+  const columnValuesString = JSON.stringify(updates).replace(/"([^"]+)":/g, '$1:');
+  console.log(`Updating item ${itemId} with values: ${columnValuesString}`);
+
   const mutation = `
   mutation {
-    change_multiple_column_values(item_id: ${itemId}, board_id: ${BOARD_ID}, column_values: ${JSON.stringify(updates).replace(/"([^"]+)":/g, '$1:')}) {
+    change_multiple_column_values(item_id: ${itemId}, board_id: ${BOARD_ID}, column_values: ${columnValuesString}) {
       id
     }
   }`;
