@@ -110,6 +110,9 @@ function mergeCollectedValuesIntoOriginal(original, collectedValues) {
       console.log(`Merged collected value for ${column.id}: ${column.text}`);
     }
   });
+
+  // Log the final state of the original item after merging
+  console.log(`Final merged values for original item ${original.id}: ${JSON.stringify(original.column_values)}`);
 }
 
 // Function to update the original item
@@ -126,12 +129,12 @@ async function updateItem(itemId, values) {
     }
   });
 
-  const columnValuesString = JSON.stringify(updates);
+  const columnValuesString = JSON.stringify(updates).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   console.log(`Updating item ${itemId} with values: ${columnValuesString}`);
 
   const mutation = `
   mutation {
-    change_multiple_column_values(item_id: ${itemId}, board_id: ${BOARD_ID}, column_values: "${columnValuesString.replace(/"/g, '\\"')}")
+    change_multiple_column_values(item_id: ${itemId}, board_id: ${BOARD_ID}, column_values: "${columnValuesString}")
     {
       id
     }
