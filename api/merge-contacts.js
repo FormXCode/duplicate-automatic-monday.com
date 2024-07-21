@@ -11,30 +11,42 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-// Function to get board items
-async function getBoardItems(boardId) {
-  const query = `
-  {
-    boards (ids: ${boardId}) {
-      items {
-        id
-        name
-        column_values {
-          id
-          text
+// Function to get all board items using pagination
+async function getAllBoardItems(boardId) {
+  let items = [];
+  let cursor = null;
+  let hasMore = true;
+
+  while (hasMore) {
+    const query = `
+    {
+      boards(ids: ${boardId}) {
+        items_page(cursor: ${cursor ? `"${cursor}"` : null}, limit: 100) {
+          cursor
+          items {
+            id
+            name
+            column_values(ids: "${EMAIL_COLUMN_ID}") {
+              text
+            }
+          }
         }
       }
-    }
-  }`;
+    }`;
 
-  try {
-    const response = await axios.post('https://api.monday.com/v2', { query }, { headers });
-    console.log('Fetched board items:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching board items:', error.response ? error.response.data : error.message);
-    throw error;
+    try {
+      const response = await axios.post('https://api.monday.com/v2', { query }, { headers });
+      const data = response.data.data.boards[0].items_page;
+      items = items.concat(data.items);
+      cursor = data.cursor;
+      hasMore = !!cursor;
+    } catch (error) {
+      console.error('Error fetching board items:', error.response ? error.response.data : error.message);
+      throw error;
+    }
   }
+
+  return items;
 }
 
 // Function to merge contacts
@@ -125,8 +137,8 @@ async function deleteItem(itemId) {
 // Main function to orchestrate merging
 async function main() {
   console.log('Fetching board items...');
-  const boardData = await getBoardItems(BOARD_ID);
-  const items = boardData.data.boards[0].items;
+  const items = await getAllBoardItems(BOARD_ID);
+  console.log('Fetched board items:', items);
   console.log('Merging contacts...');
   await mergeContacts(items, EMAIL_COLUMN_ID);
   console.log('Contacts merged successfully.');
