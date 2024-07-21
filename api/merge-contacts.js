@@ -21,7 +21,7 @@ async function getAllBoardItems(boardId) {
     const query = `
     {
       boards(ids: ${boardId}) {
-        items_page(cursor: ${cursor ? `"${cursor}"` : null}, limit: 500) {
+        items_page(cursor: ${cursor ? `"${cursor}"` : null}, limit: 100) {
           cursor
           items {
             id
@@ -89,6 +89,7 @@ async function mergeItem(original, duplicate) {
       }
     }
   });
+  console.log(`Merged item ${duplicate.id} into ${original.id}`);
 }
 
 // Function to update the original item
@@ -107,10 +108,10 @@ async function updateItem(itemId, values) {
 
   try {
     const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
-    console.log('Updated item:', response.data);
+    console.log(`Updated item ${itemId}:`, response.data);
     return response.data;
   } catch (error) {
-    console.error('Error updating item:', error.response ? error.response.data : error.message);
+    console.error(`Error updating item ${itemId}:`, error.response ? error.response.data : error.message);
     throw error;
   }
 }
@@ -126,10 +127,10 @@ async function deleteItem(itemId) {
 
   try {
     const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
-    console.log('Deleted item:', response.data);
+    console.log(`Deleted item ${itemId}:`, response.data);
     return response.data;
   } catch (error) {
-    console.error('Error deleting item:', error.response ? error.response.data : error.message);
+    console.error(`Error deleting item ${itemId}:`, error.response ? error.response.data : error.message);
     throw error;
   }
 }
