@@ -85,7 +85,7 @@ async function mergeContacts(items, emailColumnId) {
         await deleteItem(group[i].id);
       }
       console.log(`Collected values: ${JSON.stringify(collectedValues)}`);
-      mergeItemValues(original, { column_values: Object.keys(collectedValues).map(id => ({ id, text: collectedValues[id] })) });
+      mergeCollectedValuesIntoOriginal(original, collectedValues);
       console.log(`Updating original item ${original.id} with collected values`);
       await updateItem(original.id, original.column_values);
     }
@@ -102,6 +102,16 @@ function mergeItemValues(target, source) {
   });
 }
 
+// Function to merge collected values into the original item
+function mergeCollectedValuesIntoOriginal(original, collectedValues) {
+  original.column_values.forEach((column) => {
+    if (collectedValues[column.id] && !column.text) {
+      column.text = collectedValues[column.id];
+      console.log(`Merged collected value for ${column.id}: ${column.text}`);
+    }
+  });
+}
+
 // Function to update the original item
 async function updateItem(itemId, values) {
   const updates = {};
@@ -111,8 +121,8 @@ async function updateItem(itemId, values) {
         email: column.text,
         text: "", // Ensure the text field is an empty string
       };
-    } else {
-      updates[column.id] = column.text || ""; // Ensure empty strings for empty values
+    } else if (column.text) {
+      updates[column.id] = column.text;
     }
   });
 
