@@ -7,8 +7,8 @@ const EMAIL_COLUMN_ID = process.env.EMAIL_COLUMN_ID;
 
 // Set headers for API requests
 const headers = {
-  'Authorization': API_KEY,
-  'Content-Type': 'application/json'
+  Authorization: API_KEY,
+  'Content-Type': 'application/json',
 };
 
 // Function to get all board items using pagination with new syntax
@@ -37,7 +37,7 @@ async function getAllBoardItems(boardId) {
 
     const variables = {
       board_id: boardId,
-      cursor: cursor
+      cursor: cursor,
     };
 
     try {
@@ -63,9 +63,9 @@ async function getAllBoardItems(boardId) {
 // Function to merge contacts
 async function mergeContacts(items, emailColumnId) {
   const emailMap = {};
-  items.forEach(item => {
+  items.forEach((item) => {
     const itemId = item.id;
-    const email = item.column_values.find(column => column.id === emailColumnId)?.text;
+    const email = item.column_values.find((column) => column.id === emailColumnId)?.text;
     if (email) {
       if (emailMap[email]) {
         emailMap[email].push(item);
@@ -92,8 +92,8 @@ async function mergeContacts(items, emailColumnId) {
 
 // Function to merge duplicate item into the original item
 async function mergeItem(original, duplicate) {
-  duplicate.column_values.forEach(column => {
-    const originalColumn = original.column_values.find(col => col.id === column.id);
+  duplicate.column_values.forEach((column) => {
+    const originalColumn = original.column_values.find((col) => col.id === column.id);
     if (!originalColumn.text) {
       originalColumn.text = column.text;
     }
@@ -105,8 +105,15 @@ async function mergeItem(original, duplicate) {
 // Function to update the original item
 async function updateItem(itemId, values) {
   const updates = {};
-  values.forEach(column => {
-    updates[column.id] = column.text;
+  values.forEach((column) => {
+    if (column.id === EMAIL_COLUMN_ID) {
+      updates[column.id] = {
+        email: column.text,
+        text: "", // Ensure the text field is an empty string
+      };
+    } else {
+      updates[column.id] = column.text;
+    }
   });
 
   const columnValuesString = JSON.stringify(updates).replace(/"([^"]+)":/g, '$1:');
@@ -114,7 +121,7 @@ async function updateItem(itemId, values) {
 
   const mutation = `
   mutation {
-    change_multiple_column_values(item_id: ${itemId}, board_id: ${BOARD_ID}, column_values: ${columnValuesString}) {
+    change_multiple_column_values(item_id: ${itemId}, board_id: ${BOARD_ID}, column_values: "${columnValuesString.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}") {
       id
     }
   }`;
