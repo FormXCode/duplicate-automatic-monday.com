@@ -105,9 +105,11 @@ function mergeItemValues(target, source) {
 // Function to merge collected values into the original item
 function mergeCollectedValuesIntoOriginal(original, collectedValues) {
   original.column_values.forEach((column) => {
+    // Check if the original value is empty and a collected value is present
     if (collectedValues[column.id] && !column.text) {
+      console.log(`Before merge: ${column.id} - Original: ${column.text}, Collected: ${collectedValues[column.id]}`);
       column.text = collectedValues[column.id];
-      console.log(`Merged collected value for ${column.id}: ${column.text}`);
+      console.log(`After merge: ${column.id} - Merged: ${column.text}`);
     }
   });
 
@@ -144,7 +146,7 @@ async function updateItem(itemId, values) {
 
   try {
     const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
-    console.log(`Updated item ${itemId}`);
+    console.log(`Updated item ${itemId}: ${JSON.stringify(response.data)}`);
     return response.data;
   } catch (error) {
     console.error(`Error updating item ${itemId}:`, error.response ? error.response.data : error.message);
