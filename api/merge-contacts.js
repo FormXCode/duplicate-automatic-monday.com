@@ -27,8 +27,14 @@ async function getBoardItems(boardId) {
     }
   }`;
 
-  const response = await axios.post('https://api.monday.com/v2', { query }, { headers });
-  return response.data;
+  try {
+    const response = await axios.post('https://api.monday.com/v2', { query }, { headers });
+    console.log('Fetched board items:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching board items:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 }
 
 // Function to merge contacts
@@ -36,21 +42,19 @@ async function mergeContacts(items, emailColumnId) {
   const emailMap = {};
   const duplicates = [];
 
-  // Group items by email address
   items.forEach(item => {
     const itemId = item.id;
     const email = item.column_values.find(column => column.id === emailColumnId)?.text;
 
     if (email) {
       if (emailMap[email]) {
-        duplicates.push(item);
+        emailMap[email].push(item);
       } else {
         emailMap[email] = [item];
       }
     }
   });
 
-  // Process each group of duplicates
   for (const [email, group] of Object.entries(emailMap)) {
     if (group.length > 1) {
       const original = group[0];
@@ -89,8 +93,14 @@ async function updateItem(itemId, values) {
     }
   }`;
 
-  const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
-  return response.data;
+  try {
+    const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
+    console.log('Updated item:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating item:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 }
 
 // Function to delete a duplicate item
@@ -102,24 +112,35 @@ async function deleteItem(itemId) {
     }
   }`;
 
-  const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
-  return response.data;
+  try {
+    const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
+    console.log('Deleted item:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting item:', error.response ? error.response.data : error.message);
+    throw error;
+  }
 }
 
 // Main function to orchestrate merging
 async function main() {
+  console.log('Fetching board items...');
   const boardData = await getBoardItems(BOARD_ID);
   const items = boardData.data.boards[0].items;
+  console.log('Merging contacts...');
   await mergeContacts(items, EMAIL_COLUMN_ID);
+  console.log('Contacts merged successfully.');
 }
 
 // Handler function for the serverless function
 module.exports = async (req, res) => {
   try {
+    console.log('Merge contacts job started.');
     await main();
+    console.log('Merge contacts job finished.');
     res.status(200).send('Merge contacts job finished.');
   } catch (error) {
-    console.error('Error running job:', error);
+    console.error('Error running job:', error.response ? error.response.data : error.message);
     res.status(500).send('Error running merge contacts job.');
   }
 };
