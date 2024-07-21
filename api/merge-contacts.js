@@ -11,7 +11,7 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-// Function to get all board items using pagination
+// Function to get all board items using pagination with new syntax
 async function getAllBoardItems(boardId) {
   let items = [];
   let cursor = null;
@@ -19,9 +19,9 @@ async function getAllBoardItems(boardId) {
 
   while (hasMore) {
     const query = `
-    {
-      boards(ids: ${boardId}) {
-        items_page(cursor: ${cursor ? `"${cursor}"` : null}, limit: 100) {
+    query ($board_id: [ID!]!, $cursor: String) {
+      boards(ids: $board_id) {
+        items_page(limit: 100, cursor: $cursor) {
           cursor
           items {
             id
@@ -35,8 +35,17 @@ async function getAllBoardItems(boardId) {
       }
     }`;
 
+    const variables = {
+      board_id: boardId,
+      cursor: cursor
+    };
+
     try {
-      const response = await axios.post('https://api.monday.com/v2', { query }, { headers });
+      const response = await axios.post(
+        'https://api.monday.com/v2',
+        { query, variables },
+        { headers }
+      );
       const data = response.data.data.boards[0].items_page;
       items = items.concat(data.items);
       cursor = data.cursor;
