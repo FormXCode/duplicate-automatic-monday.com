@@ -26,7 +26,7 @@ async function getAllBoardItems(boardId) {
           items {
             id
             name
-            column_values(ids: "${EMAIL_COLUMN_ID}") {
+            column_values {
               id
               text
             }
@@ -75,30 +75,31 @@ async function mergeContacts(items, emailColumnId) {
     }
   });
 
-  console.log(`Email map: ${JSON.stringify(emailMap, null, 2)}`);
-
   for (const [email, group] of Object.entries(emailMap)) {
     if (group.length > 1) {
       const original = group[0];
-      console.log(`Original item for ${email}: ${JSON.stringify(original, null, 2)}`);
+      const collectedValues = {};
+      console.log(`Collecting values for duplicates of ${email}`);
       for (let i = 1; i < group.length; i++) {
-        mergeItem(original, group[i]);
+        mergeItemValues(collectedValues, group[i]);
         await deleteItem(group[i].id);
       }
+      console.log(`Collected values: ${JSON.stringify(collectedValues)}`);
+      mergeItemValues(original, { column_values: Object.keys(collectedValues).map(id => ({ id, text: collectedValues[id] })) });
+      console.log(`Updating original item ${original.id} with collected values`);
       await updateItem(original.id, original.column_values);
     }
   }
 }
 
-// Function to merge duplicate item into the original item
-function mergeItem(original, duplicate) {
-  duplicate.column_values.forEach((column) => {
-    const originalColumn = original.column_values.find((col) => col.id === column.id);
-    if (!originalColumn.text && column.text) {
-      originalColumn.text = column.text;
+// Function to collect values from duplicates
+function mergeItemValues(target, source) {
+  source.column_values.forEach((column) => {
+    if (column.text) {
+      target[column.id] = column.text;
+      console.log(`Collected value for ${column.id}: ${column.text}`);
     }
   });
-  console.log(`Merged item ${duplicate.id} into ${original.id}`);
 }
 
 // Function to update the original item
@@ -116,7 +117,6 @@ async function updateItem(itemId, values) {
   });
 
   const columnValuesString = JSON.stringify(updates).replace(/"([^"]+)":/g, '$1:');
-  console.log(`Updating item ${itemId} with values: ${columnValuesString}`);
 
   const mutation = `
   mutation {
@@ -125,11 +125,9 @@ async function updateItem(itemId, values) {
     }
   }`;
 
-  console.log(`Mutation query: ${mutation}`);
-
   try {
     const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
-    console.log(`Updated item ${itemId}:`, response.data);
+    console.log(`Updated item ${itemId}`);
     return response.data;
   } catch (error) {
     console.error(`Error updating item ${itemId}:`, error.response ? error.response.data : error.message);
@@ -148,7 +146,7 @@ async function deleteItem(itemId) {
 
   try {
     const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
-    console.log(`Deleted item ${itemId}:`, response.data);
+    console.log(`Deleted item ${itemId}`);
     return response.data;
   } catch (error) {
     console.error(`Error deleting item ${itemId}:`, error.response ? error.response.data : error.message);
@@ -160,7 +158,6 @@ async function deleteItem(itemId) {
 async function main() {
   console.log('Fetching board items...');
   const items = await getAllBoardItems(BOARD_ID);
-  console.log('Fetched board items:', JSON.stringify(items, null, 2));
   console.log('Merging contacts...');
   await mergeContacts(items, EMAIL_COLUMN_ID);
   console.log('Contacts merged successfully.');
