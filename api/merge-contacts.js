@@ -27,6 +27,7 @@ async function getAllBoardItems(boardId) {
             id
             name
             column_values(ids: "${EMAIL_COLUMN_ID}") {
+              id
               text
             }
           }
@@ -70,6 +71,7 @@ async function mergeContacts(items, emailColumnId) {
   for (const [email, group] of Object.entries(emailMap)) {
     if (group.length > 1) {
       const original = group[0];
+      console.log(`Original item for ${email}: ${JSON.stringify(original, null, 2)}`);
       for (let i = 1; i < group.length; i++) {
         await mergeItem(original, group[i]);
         await deleteItem(group[i].id);
@@ -139,7 +141,7 @@ async function deleteItem(itemId) {
 async function main() {
   console.log('Fetching board items...');
   const items = await getAllBoardItems(BOARD_ID);
-  console.log('Fetched board items:', items);
+  console.log('Fetched board items:', JSON.stringify(items, null, 2));
   console.log('Merging contacts...');
   await mergeContacts(items, EMAIL_COLUMN_ID);
   console.log('Contacts merged successfully.');
