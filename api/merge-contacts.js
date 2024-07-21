@@ -110,6 +110,8 @@ async function updateItem(itemId, values) {
     }
   }`;
 
+  console.log(`Mutation query: ${mutation}`);
+
   try {
     const response = await axios.post('https://api.monday.com/v2', { query: mutation }, { headers });
     console.log(`Updated item ${itemId}:`, response.data);
