@@ -21,7 +21,7 @@ async function getAllBoardItems(boardId) {
     const query = `
     query ($board_id: [ID!]!, $cursor: String) {
       boards(ids: $board_id) {
-        items_page(limit: 500, cursor: $cursor) {
+        items_page(limit: 200, cursor: $cursor) {
           cursor
           items {
             id
